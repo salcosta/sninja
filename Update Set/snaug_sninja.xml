@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2015-01-15 04:27:48">
+<sys_remote_update_set action="INSERT_OR_UPDATE">
+<collisions/>
+<commit_date/>
+<deleted/>
+<description/>
+<inserted/>
+<name>Snaug - SNinja</name>
+<origin_sys_id/>
+<release_date/>
+<remote_sys_id>26ecb8762b6135009728f70a89da15ea</remote_sys_id>
+<state>loaded</state>
+<summary/>
+<sys_created_by>Snaug</sys_created_by>
+<sys_created_on>2015-01-15 04:27:47</sys_created_on>
+<sys_id>734ef4762b6135009728f70a89da153e</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>Snaug</sys_updated_by>
+<sys_updated_on>2015-01-15 04:27:47</sys_updated_on>
+<update_set display_value=""/>
+<update_source display_value=""/>
+<updated/>
+</sys_remote_update_set>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value=""/>
+<category>customer</category>
+<comments/>
+<name>sys_ui_script_4e58c8c62bc0310043ce127c17da159a</name>
+<payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_script"><sys_ui_script action="INSERT_OR_UPDATE"><active>true</active><description/><global>false</global><name>sninja</name><script><![CDATA[var sninja;
+
+(function($) {
+
+    sninja = {
+        visible: false,
+        suggestion: '',
+        bloodhound: {},
+        tabCount : 0,
+        mode : 'default',
+        search: {},
+        commandArray : [],
+        commandIndex : 0,
+        commands: {
+
+            "list": {
+                "context": "table",
+                "command": function(item, newWindow) {
+                    sninja.openWindow(item + "_list.do", newWindow);
+                }
+
+            },
+            "form": {
+                "context": "table",
+                "command": function(item, newWindow) {
+                    sninja.openWindow(item + ".do", newWindow);
+                }
+
+            },
+
+            "dict": {
+                "context": "table",
+                "command": function(item, newWindow) {
+
+                    sninja.openWindow("sys_dictionary_list.do?sysparm_query=name=" + item, newWindow);
+                }
+            },
+            "recent": {
+                "context": "table",
+                "command": function(item, newWindow) {
+
+                    sninja.openWindow(item + "_list.do?sysparm_query=sys_updated_onONToday@javascript:gs.daysAgoStart(0)@javascript:gs.daysAgoEnd(0)", newWindow);
+
+                }
+            },
+            "do": {
+                "context": "any",
+                "command": function(item, newWindow) {
+
+                    sninja.openWindow(item + ".do", newWindow);
+
+                }
+            },
+
+            "open": {
+                "context": "any",
+                "command": function(item, newWindow, suggestion) {
+                    var link = "";
+
+                    if (suggestion.type == "direct") {
+                        link = suggestion.args;
+                    } else if (suggestion.type == "list") {
+                        link = suggestion.link + "_list.do?" + ["sysparm_query=" + suggestion.filter, "sysparm_view=" + suggestion.view].join("&");
+                    } else if (suggestion.type == "new") {
+                        link = suggestion.link + ".do?sysparm_id=-1&" + ["sysparm_query=" + suggestion.filter, "sysparm_view=" + suggestion.view].join("&");
+                    } else if (suggestion.type == "report") {
+                        link = "sys_report_template.do?jvar_report_id=" + suggestion.report + "&sysparm_from_list=true";
+                    } else if (suggestion.type == "detail") {
+                        link = suggestion.link + ".do?sysparm_query=" + suggestion.args + "&sysparm_view=" + suggestion.view;
+                    } else if (suggestion.type == "script") {
+                        newWindow = true;
+                        link = "sys.scripts.do?action=run_module&sys_id=" + suggestion.id;
+                    }
+
+
+                    if (link !== "") {
+                        sninja.openWindow(link, newWindow);
+                    }
+
+
+                }
+            },
+
+            "br" : {
+                "context" : "any",
+                "command" : function(item, newWindow){
+                    sninja.openWindow("sys_script_list.do?sysparm_query=table=" + item, newWindow);
+                }
+            },
+
+            "cs" : {
+                "context" : "any",
+                "command" : function(item, newWindow){
+                    sninja.openWindow("sys_client_script_list.do?sysparm_query=table=" + item, newWindow);
+                }
+            },
+
+            "acl" : {
+                "context" : "any",
+                "command" : function(item, newWindow){
+                    sninja.openWindow("sys_security_acl_list.do?sysparm_query=nameSTARTSWITH" + item, newWindow);
+                }
+            },
+
+            "act" : {
+                "context" : "any",
+                "command" : function(item, newWindow){
+                    sninja.openWindow("sys_ui_action_list.do?sysparm_query=table=" + item, newWindow);
+                }
+            },
+
+            "pol" : {
+                "context" : "any",
+                "command" : function(item, newWindow){
+                    sninja.openWindow("sys_ui_policy_list.do?sysparm_query=table=" + item, newWindow);
+                }
+            },      
+
+            "search" : {
+                "command" : function(item){
+                    sninja.openWindow(item[0] + "_list.do?sysparm_query=123TEXTQUERY321=" + item[2], false);
+                }                
+            }      
+        },
+
+        openWindow : function(link, newWindow){
+
+            if(!newWindow){
+                sninja.getMainWindow().location = link;
+            } else {
+                window.open(link);
+                
+            }
+        },
+
+        getTable : function(){
+            var table = sninja.getMainWindow().location.pathname.toString().split('.do')[0];
+            table = table.replace("/","");
+            table = table.replace("_list","");
+
+            return table;
+        },
+
+        init: function() {
+
+            for (var key in sninja.commands) {
+                if (sninja.commands.hasOwnProperty(key)) {
+                    sninja.commandArray.push(key);
+                }
+            }
+            this.getUserPermission()
+        },
+
+        startSninja: function() {
+            this.addSearch();
+            this.bindKeys();
+            
+            var data = localStorage["searchData"];
+
+            if(!data){
+                this.getACValues();
+            } else {
+                sninja.search = JSON.parse(data);
+                console.log("sninja - Loaded AC Values From Cache");
+                sninja.initializeTypeahead();
+            }
+
+        },
+
+        getMainWindow: function() {
+            var mainWindow = getMainWindow();
+
+            if (mainWindow === undefined) {
+                return self
+            } else {
+                return mainWindow
+            }
+
+        },
+
+        bindKeys: function() {
+
+            $(document).on('keydown', this.processEvent);
+            $(document).on('keyup', this.processEventUp);
+
+
+        },
+        processEventUp: function(event) {
+
+            if (sninja.visible) {
+                if ($("#sninja_search").is(":focus")) {
+                    var command = $("#sninja_search").val().split(".");
+                    if( command == "refresh"){
+                        sninja.getACValues();
+                        sninja.reset();
+                    }
+                    if (command.length == 2) {
+                        if (sninja.commands[command[1]]) {
+                            sninja.run_command(command);
+                        }
+                    }
+                }
+            } else if (event.which == 9 && sninja.visible == true) {
+
+
+                event.preventDefault();
+                event.stopPropagation();
+
+            }
+
+        },
+        processEvent: function(event) {
+            if (event.which == 192) {
+                if (!sninja.visible) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    sninja.loadSearch();
+
+                } else {
+                    sninja.closeSearch();
+                }
+            } else if (event.which == 27 && sninja.visible == true) {
+                sninja.closeSearch();
+                event.preventDefault();
+                event.stopPropagation();
+                sninja.reset();
+            } else if (event.which == 13 && sninja.visible == true) {
+                if ($("#sninja_search").is(":focus")) {
+
+                    var textVal = $("#sninja_search").val();
+                    
+                    if(sninja.mode == 'search'){
+                        textVal = textVal.replace("Search ","");
+                        var terms = textVal.split(":");
+                        command = [terms[0],'search',terms[1]];
+
+                    } else {
+                        command = textVal.split(".");
+                    }
+
+                    sninja.run_command(command);
+                    sninja.reset();
+                }
+            } else if (event.which == 190 && sninja.visible == true) {
+                var term = $("#sninja_search").val().split(".")[0];
+                sninja.search_for_command(term);
+
+            } else if (event.which == 9 && sninja.visible == true) {
+                var text = $("#sninja_search").val();
+                
+                if( typeof sninja.suggestion == 'object' && sninja.tabCount == 1 ){
+                    $("#sninja_search").val("Search " + text + ": ");
+                    sninja.tabCount = 2;
+                    sninja.mode = 'search';
+                } else {
+                    sninja.search_partial_match(text);
+                    
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+            } else if ( (event.which == 192 || event.which == 8) && sninja.visible == true) {
+                sninja.tabCount = 0;
+                sninja.mode = 'default';
+                sninja.suggestion = '';
+            }
+
+        },
+
+        search_for_command: function(term) {
+            sninja.bloodhound.tables.get(term, function(suggestions) {
+                suggestions.each(function(suggestion) {
+                    if (suggestion.value == term) {
+                        sninja.suggestion = suggestion;
+                    }
+                });
+            });
+
+            sninja.bloodhound.modules.get(term, function(suggestions) {
+                suggestions.each(function(suggestion) {
+                    if (suggestion.value == term) {
+                        sninja.suggestion = suggestion;
+                    }
+                });
+            });
+
+            return false;
+        },
+
+        search_partial_match: function(term) {
+            sninja.tabCount = 1;
+            sninja.bloodhound.tables.get(term, function(suggestions) {
+                if (suggestions.length !== 0) {
+                    $("#sninja_search").typeahead('val', suggestions[0].value);
+                    sninja.suggestion = suggestions[0];
+                }
+            });
+        },
+
+        run_command: function(command) {
+
+            if (command.length == 1) command.push("open");
+            if( command[0] == "current" ) command[0] = sninja.getTable();
+
+
+            if (sninja.suggestion == '') sninja.suggestion = {
+                value: command[0],
+                type: "table"
+            };
+
+            var commandName = command[1].toLowerCase();
+
+            if(commandName == 'search'){
+                sninja.commands[commandName].command(command);
+            } else if (sninja.commands[commandName].context == sninja.suggestion.type || sninja.commands[commandName].context == "any") {
+                sninja.commands[commandName].command(sninja.suggestion.value, command[1] === command[1].toUpperCase(), sninja.suggestion);
+            }
+
+
+            sninja.closeSearch();
+        },
+
+        reset: function() {
+
+            $("#sninja_search").typeahead('val', '');
+            sninja.suggestion = "";
+            sninja.tabCount = 0;
+            sninja.mode = 'default';
+            sninja.commandIndex = 0;            
+        },
+
+        closeSearch: function() {
+            sninja.reset();
+            sninja.visible = false;
+            $('.sninja').fadeOut(100);
+        },
+
+        loadSearch: function() {
+            sninja.suggestion = ''
+            $("#sninja_search").typeahead('val', '');
+            sninja.visible = true;
+
+            $('.sninja').fadeIn(50, function() {
+                $("#sninja_search").focus();
+            });
+        },
+
+        addSearch: function() {
+
+            var container = $("<div></div>").addClass("sninja").addClass("sninja-search-container").appendTo("body");
+            $("<input></input>").attr("id", "sninja_search").addClass("sninja-search-box").addClass("typeahead").appendTo(container);
+
+        },
+
+        initializeTypeahead: function() {
+
+
+            sninja.bloodhound.tables = new Bloodhound({
+                datumTokenizer: function(d) {
+                    return Bloodhound.tokenizers.whitespace(d.tokens.join(' '));
+                },
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                sorter: function(a, b) {
+
+                    if (a.value.length < b.value.length) {
+                        return -1;
+                    }
+                    if (a.value.length > b.value.length) {
+                        return 1;
+                    }
+
+                    return 0;
+                },
+                local: sninja.search.tables
+            });
+
+            sninja.bloodhound.modules = new Bloodhound({
+                datumTokenizer: function(d) {
+                    return Bloodhound.tokenizers.whitespace(d.tokens.join(' '));
+                },
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                local: sninja.search.modules
+            });
+
+            sninja.bloodhound.tables.initialize();
+            sninja.bloodhound.modules.initialize();
+
+            $('#sninja_search').typeahead({
+                hint: true,
+                highlight: true,
+                minLength: 1
+            }, {
+                name: 'tables',
+                displayKey: 'value',
+                source: sninja.bloodhound.tables.ttAdapter(),
+                templates: {
+                    suggestion: Handlebars.compile('<p><strong>{{value}}</strong></p>')
+                }
+            }, {
+                name: 'modules',
+                displayKey: 'value',
+                source: sninja.bloodhound.modules.ttAdapter(),
+                templates: {
+                    suggestion: Handlebars.compile('<p><strong>{{title}}</strong> ({{section}})</p>')
+                }
+
+            }).bind('typeahead:selected', function(obj, datum, name) {
+                sninja.suggestion = datum
+            }).bind('typeahead:autocompleted', function(obj, datum, name) {
+                sninja.suggestion = datum;
+            }).bind('typeahead:cursorchanged', function(obj, datum, name) {
+                sninja.suggestion = datum;
+            });
+
+
+
+        },
+
+        getACValues: function() {
+            var ga = new GlideAjax("SNinja");
+            ga.addParam('sysparm_name', 'getACValues');
+            console.log("sninja - Loading AC Values")
+            ga.getXML(function(response) {
+                var data = response.responseXML.documentElement.getAttribute("answer");
+                localStorage["searchData"] = data;
+                sninja.search = JSON.parse(data);
+                sninja.initializeTypeahead();
+            });
+        },
+
+        getUserPermission: function() {
+            var ga = new GlideAjax("SNinja");
+            ga.addParam('sysparm_name', 'getUserPermission');
+
+            ga.getXML(function(response) {
+                var data = response.responseXML.documentElement.getAttribute("answer") == "true";
+                if (data == true) {
+                    sninja.startSninja();
+                }
+
+
+            });
+        }
+
+    };
+
+    $(document).ready(function() {
+        sninja.init();
+    })
+
+})(jQuery)]]]]><![CDATA[></script><sys_created_by>admin</sys_created_by><sys_created_on>2014-10-30 03:02:29</sys_created_on><sys_id>4e58c8c62bc0310043ce127c17da159a</sys_id><sys_mod_count>194</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:26:40</sys_updated_on></sys_ui_script><sys_app_file action="INSERT_OR_UPDATE"><customer_update>true</customer_update><publish_override/><replace_on_upgrade>false</replace_on_upgrade><restore/><sys_app/><sys_code>!!2.N/</sys_code><sys_created_by>admin</sys_created_by><sys_created_on>2014-10-30 03:02:29</sys_created_on><sys_id>935888862bc0310043ce127c17da1510</sys_id><sys_mod_count>0</sys_mod_count><sys_name>sninja</sys_name><sys_parent/><sys_path>!!2.N/</sys_path><sys_policy/><sys_source_deleted>false</sys_source_deleted><sys_source_id>4e58c8c62bc0310043ce127c17da159a</sys_source_id><sys_source_table>sys_ui_script</sys_source_table><sys_type>code</sys_type><sys_update_name>sys_ui_script_4e58c8c62bc0310043ce127c17da159a</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:26:40</sys_updated_on></sys_app_file></record_update>]]></payload>
+<remote_update_set display_value="Snaug - SNinja">734ef4762b6135009728f70a89da153e</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2015-01-15 04:27:47</sys_created_on>
+<sys_id>045ef4762b6135009728f70a89da153e</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2015-01-15 04:27:47</sys_updated_on>
+<table/>
+<target_name>sninja</target_name>
+<type>UI Script</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value=""/>
+<category>customer</category>
+<comments/>
+<name>sys_ui_script_b56248862bc0310043ce127c17da15a3</name>
+<payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_script"><sys_ui_script action="INSERT_OR_UPDATE"><active>true</active><description/><global>true</global><name>sninja_loader</name><script><![CDATA[if (self === top) {
+
+    console.log('Sninja Starting Loading');
+    [
+      '958988c62bc0310043ce127c17da15df.cssdbx',
+      'https://fonts.googleapis.com/css?family=Open+Sans'
+    ].forEach(function(src) {
+      var link = document.createElement('link');
+      link.href = src;
+      link.rel = 'stylesheet';
+      link.type = 'text/css'
+      document.head.appendChild(link);
+    });
+
+    [
+      'jQuery-1.11.1.min.jsdbx',
+      '//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.10.4/typeahead.bundle.min.js',
+      '//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js',
+      'sninja.jsdbx'
+    ].forEach(function(src) {
+      var script = document.createElement('script');
+      script.src = src;
+      script.async = false;
+      document.head.appendChild(script);
+    });
+
+    setTimeout(function(){
+        console.log('Sninja Finished Loading');
+    },1);
+
+}
+ else {
+
+   window.onkeydown = top.sninja.processEvent;
+
+}]]]]><![CDATA[></script><sys_created_by>admin</sys_created_by><sys_created_on>2014-10-30 02:37:07</sys_created_on><sys_id>b56248862bc0310043ce127c17da15a3</sys_id><sys_mod_count>54</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:26:50</sys_updated_on></sys_ui_script><sys_app_file action="INSERT_OR_UPDATE"><customer_update>true</customer_update><publish_override/><replace_on_upgrade>false</replace_on_upgrade><restore/><sys_app/><sys_code>!!2.M/</sys_code><sys_created_by>admin</sys_created_by><sys_created_on>2014-10-30 02:37:07</sys_created_on><sys_id>ff8240862bc0310043ce127c17da157c</sys_id><sys_mod_count>0</sys_mod_count><sys_name>sninja_loader</sys_name><sys_parent/><sys_path>!!2.M/</sys_path><sys_policy/><sys_source_deleted>false</sys_source_deleted><sys_source_id>b56248862bc0310043ce127c17da15a3</sys_source_id><sys_source_table>sys_ui_script</sys_source_table><sys_type>code</sys_type><sys_update_name>sys_ui_script_b56248862bc0310043ce127c17da15a3</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:26:50</sys_updated_on></sys_app_file></record_update>]]></payload>
+<remote_update_set display_value="Snaug - SNinja">734ef4762b6135009728f70a89da153e</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2015-01-15 04:27:47</sys_created_on>
+<sys_id>445ef4762b6135009728f70a89da153e</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2015-01-15 04:27:47</sys_updated_on>
+<table/>
+<target_name>sninja_loader</target_name>
+<type>UI Script</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value=""/>
+<category>customer</category>
+<comments/>
+<name>content_css_958988c62bc0310043ce127c17da15df</name>
+<payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="content_css"><content_css action="INSERT_OR_UPDATE"><name>sninja</name><style>.sninja-search-container{&#13;
+    display: none;&#13;
+    z-index: 101;&#13;
+    height: 100px;&#13;
+    width: 400px;&#13;
+    position: fixed;&#13;
+    left: 30px;&#13;
+    top: 30px;&#13;
+&#13;
+}&#13;
+&#13;
+.sninja-search-container input{&#13;
+    font-family: 'Open Sans', sans-serif;&#13;
+    width: 100%;&#13;
+    font-size: 24px;&#13;
+    height:50px;&#13;
+    padding:10px;&#13;
+    border:none;&#13;
+    background: #082A3A;&#13;
+    color:#fff;&#13;
+}&#13;
+&#13;
+.sninja-search-container input:focus{&#13;
+    outline: none&#13;
+}&#13;
+&#13;
+span.twitter-typeahead .tt-dropdown-menu {&#13;
+  position: absolute;&#13;
+  top: 100%;&#13;
+  left: 0;&#13;
+  z-index: 1000;&#13;
+  display: none;&#13;
+  float: left;&#13;
+  min-width: 160px;&#13;
+  padding: 5px 0;&#13;
+  margin: 2px 0 0;&#13;
+  list-style: none;&#13;
+  font-size: 14px;&#13;
+  text-align: left;&#13;
+  background-color: #082A3A;&#13;
+  border: 1px solid #cccccc;&#13;
+  border: 1px solid rgba(0, 0, 0, 0.15);&#13;
+  &#13;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);&#13;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);&#13;
+  background-clip: padding-box;&#13;
+}&#13;
+&#13;
+span.twitter-typeahead .tt-suggestion &gt; p {&#13;
+  display: block;&#13;
+  padding: 3px 20px;&#13;
+  clear: both;&#13;
+  font-weight: normal;&#13;
+  line-height: 1.42857143;&#13;
+  color: #ffffff;&#13;
+  white-space: nowrap;&#13;
+}&#13;
+span.twitter-typeahead .tt-suggestion &gt; p:hover,&#13;
+span.twitter-typeahead .tt-suggestion &gt; p:focus {&#13;
+  color: #333;&#13;
+  text-decoration: none;&#13;
+  outline: 0;&#13;
+  background-color: #E9D038;&#13;
+}&#13;
+span.twitter-typeahead .tt-suggestion.tt-cursor {&#13;
+  color: #333;&#13;
+  background-color: #E9D038;&#13;
+}&#13;
+span.twitter-typeahead {&#13;
+  width: 100%;&#13;
+}&#13;
+.input-group span.twitter-typeahead {&#13;
+  display: block !important;&#13;
+}&#13;
+.input-group span.twitter-typeahead .tt-dropdown-menu {&#13;
+  top: 32px !important;&#13;
+}&#13;
+.input-group.input-group-lg span.twitter-typeahead .tt-dropdown-menu {&#13;
+  top: 44px !important;&#13;
+}&#13;
+.input-group.input-group-sm span.twitter-typeahead .tt-dropdown-menu {&#13;
+  top: 28px !important;&#13;
+}</style><sys_created_by>admin</sys_created_by><sys_created_on>2014-10-30 03:07:36</sys_created_on><sys_id>958988c62bc0310043ce127c17da15df</sys_id><sys_mod_count>27</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:26:23</sys_updated_on><type>local</type><url/></content_css><sys_app_file action="INSERT_OR_UPDATE"><customer_update>true</customer_update><publish_override/><replace_on_upgrade>false</replace_on_upgrade><restore/><sys_app/><sys_code>!!2.P/</sys_code><sys_created_by>admin</sys_created_by><sys_created_on>2014-10-30 03:07:36</sys_created_on><sys_id>a68988c62bc0310043ce127c17da15e1</sys_id><sys_mod_count>0</sys_mod_count><sys_name>sninja</sys_name><sys_parent/><sys_path>!!2.P/</sys_path><sys_policy/><sys_source_deleted>false</sys_source_deleted><sys_source_id>958988c62bc0310043ce127c17da15df</sys_source_id><sys_source_table>content_css</sys_source_table><sys_type/><sys_update_name>content_css_958988c62bc0310043ce127c17da15df</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:26:23</sys_updated_on></sys_app_file></record_update>]]></payload>
+<remote_update_set display_value="Snaug - SNinja">734ef4762b6135009728f70a89da153e</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2015-01-15 04:27:47</sys_created_on>
+<sys_id>b34ef4762b6135009728f70a89da153e</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2015-01-15 04:27:47</sys_updated_on>
+<table/>
+<target_name>sninja</target_name>
+<type>Style Sheet</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value=""/>
+<category>customer</category>
+<comments/>
+<name>sys_script_include_f9099d6c2b5831009728f70a89da1546</name>
+<payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include"><sys_script_include action="INSERT_OR_UPDATE"><active>true</active><client_callable>true</client_callable><description/><name>SNinja</name><script><![CDATA[gs.include("JSON");
+var SNinja = Class.create();
+
+SNinja.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+	getUserPermission : function(){
+		return gs.getPreference("sninja.run", false);
+	},
+
+	getACValues : function(){
+		var tableRec = new GlideRecord('sys_documentation');
+		tableRec.addQuery('element=NULL^nameNOT LIKEts_c^language=en^nameNOT LIKE0');
+		tableRec.query();
+		var searches = {
+			tables :[],
+			modules : []
+		};
+
+		while(tableRec.next()){
+			searches.tables.push({
+				value : tableRec.name.toString(),
+				section : 'Tables',
+				type : 'table',
+				tokens : [tableRec.name.toString(), tableRec.label.toString()]
+			})
+		}
+
+		var moduleRec = new GlideRecord('sys_app_module');
+		moduleRec.addQuery('link_typeINLIST,NEW,REPORT,SCRIPT,DETAIL,DIRECT^active=true');
+		moduleRec.query();
+
+		while(moduleRec.next()){
+			searches.modules.push({
+				value : moduleRec.title.getDisplayValue().toString() + " (" + moduleRec.application.getDisplayValue() + ")",
+				title : moduleRec.title.getDisplayValue().toString(),
+				section : moduleRec.application.getDisplayValue(),
+				type : moduleRec.link_type.toString().toLowerCase(),
+				tokens : [ moduleRec.title.getDisplayValue()],
+				link : moduleRec.name.toString(),
+				id : moduleRec.sys_id.toString(),
+				parms : moduleRec.filter.toString(),
+				view : moduleRec.view_name.toString(),
+				report : moduleRec.report.toString(),
+				args : moduleRec.query.toString()
+			});
+
+		}
+
+		return new JSON().encode(searches);
+	}
+
+});]]]]><![CDATA[></script><sys_created_by>admin</sys_created_by><sys_created_on>2014-11-07 03:19:50</sys_created_on><sys_id>f9099d6c2b5831009728f70a89da1546</sys_id><sys_mod_count>23</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:27:24</sys_updated_on></sys_script_include><sys_app_file action="INSERT_OR_UPDATE"><customer_update>true</customer_update><publish_override/><replace_on_upgrade>false</replace_on_upgrade><restore/><sys_app/><sys_code>!!23H/</sys_code><sys_created_by>admin</sys_created_by><sys_created_on>2014-11-07 03:19:50</sys_created_on><sys_id>73099d6c2b5831009728f70a89da154b</sys_id><sys_mod_count>0</sys_mod_count><sys_name>SNinja</sys_name><sys_parent/><sys_path>!!23H/</sys_path><sys_policy/><sys_source_deleted>false</sys_source_deleted><sys_source_id>f9099d6c2b5831009728f70a89da1546</sys_source_id><sys_source_table>sys_script_include</sys_source_table><sys_type>code</sys_type><sys_update_name>sys_script_include_f9099d6c2b5831009728f70a89da1546</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2015-01-15 04:27:24</sys_updated_on></sys_app_file></record_update>]]></payload>
+<remote_update_set display_value="Snaug - SNinja">734ef4762b6135009728f70a89da153e</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2015-01-15 04:27:47</sys_created_on>
+<sys_id>c05ef4762b6135009728f70a89da153e</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>admin</sys_updated_by>
+<sys_updated_on>2015-01-15 04:27:47</sys_updated_on>
+<table/>
+<target_name>SNinja</target_name>
+<type>Script Include</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+</unload>
